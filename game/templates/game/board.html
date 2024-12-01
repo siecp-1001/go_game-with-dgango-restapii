@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Go Game</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Go Game</h1>
+    <canvas id="board" width="820" height="820" style="border:1px solid black;"></canvas>
+    <script>
+        const canvas = document.getElementById('board');
+        const ctx = canvas.getContext('2d');
+        const cellSize = 40;
+
+        // Draw the board
+        function drawBoard() {
+            for (let i = 0; i < 19; i++) {
+                ctx.moveTo(cellSize, cellSize * (i + 1));
+                ctx.lineTo(cellSize * 19, cellSize * (i + 1));
+                ctx.stroke();
+                ctx.moveTo(cellSize * (i + 1), cellSize);
+                ctx.lineTo(cellSize * (i + 1), cellSize * 19);
+                ctx.stroke();
+            }
+        }
+
+        function placeStone(x, y, color) {
+            ctx.beginPath();
+            ctx.arc(cellSize * (x + 1), cellSize * (y + 1), 15, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+        }
+
+        drawBoard();
+
+        // Event to make a move
+        canvas.addEventListener('click', (event) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = Math.floor((event.clientX - rect.left) / cellSize);
+            const y = Math.floor((event.clientY - rect.top) / cellSize);
+
+            $.get(`/game/make_move/?x=${x}&y=${y}`, (data) => {
+                drawBoard();
+                data.groups.BLACK.forEach(group => group.forEach(([x, y]) => placeStone(x, y, 'black')));
+                data.groups.WHITE.forEach(group => group.forEach(([x, y]) => placeStone(x, y, 'white')));
+            }).fail((error) => alert(error.responseJSON.error));
+        });
+    </script>
+</body>
+</html>
